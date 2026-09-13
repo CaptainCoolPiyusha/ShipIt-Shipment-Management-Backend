@@ -62,13 +62,12 @@ def get_shipment_by_id(id : int) -> dict[str, Any]:
 def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
     content = data["content"]
 
-
-    if weight>25:
+    if weight > 25:
         raise HTTPException(
-            status_code = status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Maximum weight limit is 25"
+            status_code=http_status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Maximum weight limit is 25",
         )
-    new_id = max(shipments.keys())+1
+    new_id = max(shipments.keys()) + 1
     shipments[new_id] = {
         "content": content,
         "weight": weight,
@@ -90,6 +89,14 @@ def shipment_update(id: int, content: str, weight:float, status:str) -> dict[str
         "status": status
     }
     return shipments[id]
+
+@app.patch("/shipment")
+def patch_shipment(id: int, body: dict[str, Any]):
+    # First extract that shipment from list
+    shipment = shipments[id]
+    shipment.update(body)
+    shipments[id] = shipment
+    return shipment
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_docs():
