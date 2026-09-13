@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 
 app = FastAPI()
@@ -40,16 +40,37 @@ def get_latest_shipment():
     id = max(shipments.keys())
     return shipments[id]
 
-@app.get("/shipment")
-def get_shipment():
-    return shipments
+# Path parameter
+# @app.get("/shipment/{id}") # dynamic
+# def get_shipment_by_id(id: int) -> dict[str, Any]:
+#     if id not in shipments:
+#         return {"detail": "Given id doesn't exist"}
+#     return shipments[id]
 
-@app.get("/shipment/{id}") #dynamic
-def get_shipment_by_ID(id: int) -> dict[str , Any]:
+# Query parameter
+@app.get("/shipment")
+def get_shipment_by_id(id : int) -> dict[str, Any]:
     if id not in shipments:
-        return {"detail": "Given id doesn't exist"}
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail = "Given Id doesn't exist"
+        )
     return shipments[id]
 
+@app.post("/shipment")
+def submit_shipment(content: str, weight: float):
+    if weight>25:
+        raise HTTPException(
+            status_code = status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Maximum weight limit is 25"
+        )
+    new_id = max(shipments.keys())+1
+    shipments[new_id] = {
+        "content": content,
+        "weight": weight,
+        "status": "placed"
+    }
+    return {"id": new_id}
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_docs():
