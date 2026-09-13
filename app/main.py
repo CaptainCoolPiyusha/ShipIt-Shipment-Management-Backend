@@ -57,6 +57,7 @@ def get_shipment_by_id(id : int) -> dict[str, Any]:
         )
     return shipments[id]
 
+# Request body
 @app.post("/shipment")
 def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
     content = data["content"]
@@ -74,6 +75,21 @@ def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
         "status": "placed"
     }
     return data
+
+# Using Path and Query parameter together
+@app.get("/shipment/{field}")
+def get_shipment_field(field: str, id:int) -> Any:
+    return shipments[id][field]
+
+# Replacing the current element with new values/Update
+@app.put("/shipment")
+def shipment_update(id: int, content: str, weight:float, status:str) -> dict[str, Any]:
+    shipments[id] = {
+        "content": content,
+        "weight": weight,
+        "status": status
+    }
+    return shipments[id]
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_docs():
