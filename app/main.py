@@ -58,7 +58,10 @@ def get_shipment_by_id(id : int) -> dict[str, Any]:
     return shipments[id]
 
 @app.post("/shipment")
-def submit_shipment(content: str, weight: float):
+def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
+    content = data["content"]
+
+
     if weight>25:
         raise HTTPException(
             status_code = status.HTTP_406_NOT_ACCEPTABLE,
@@ -70,7 +73,7 @@ def submit_shipment(content: str, weight: float):
         "weight": weight,
         "status": "placed"
     }
-    return {"id": new_id}
+    return data
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_docs():
