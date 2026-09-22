@@ -1,9 +1,15 @@
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
 from scalar_fastapi import get_scalar_api_reference
 
 app = FastAPI()
+
+class Shipment(BaseModel):
+    content: str
+    weight: float
+    destination: int
 
 shipments = {
     12403: {
@@ -59,21 +65,19 @@ def get_shipment_by_id(id : int) -> dict[str, Any]:
 
 # Request body
 @app.post("/shipment")
-def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
-    content = data["content"]
-
-    if weight > 25:
+def submit_shipment(shipment: Shipment) -> dict[str, Any]:
+    if shipment.weight > 25:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Maximum weight limit is 25",
         )
     new_id = max(shipments.keys()) + 1
     shipments[new_id] = {
-        "content": content,
-        "weight": weight,
+        "content": shipment.content,
+        "weight": shipment.weight,
         "status": "placed"
     }
-    return data
+    return {"id": new_id}
 
 # Using Path and Query parameter together
 @app.get("/shipment/{field}")
@@ -91,7 +95,7 @@ def update_shipment(id: int, content: str, weight:float, status:str) -> dict[str
     return shipments[id]
 
 @app.patch("/shipment")
-def patch_shipment(id: int, body: dict[str, Any]):
+def patch_shipment(id: int, body: dict[str, Any]) -> dict[str, Any]:
     # First extract that shipment from list
     shipment = shipments[id]
     shipment.update(body)
