@@ -64,7 +64,7 @@ def submit_shipment(data: dict[str, str], weight: float) -> dict[str, Any]:
 
     if weight > 25:
         raise HTTPException(
-            status_code=http_status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Maximum weight limit is 25",
         )
     new_id = max(shipments.keys()) + 1
@@ -82,7 +82,7 @@ def get_shipment_field(field: str, id:int) -> Any:
 
 # Replacing the current element with new values/Update
 @app.put("/shipment")
-def shipment_update(id: int, content: str, weight:float, status:str) -> dict[str, Any]:
+def update_shipment(id: int, content: str, weight:float, status:str) -> dict[str, Any]:
     shipments[id] = {
         "content": content,
         "weight": weight,
@@ -97,6 +97,12 @@ def patch_shipment(id: int, body: dict[str, Any]):
     shipment.update(body)
     shipments[id] = shipment
     return shipment
+
+@app.delete("/shipment")
+def delete_shipment(id: int) -> dict[str, Any]:
+    if id in shipments:
+        shipments.pop(id)
+    return{"detail": f"Shipment with id #{id} is deleted!"}
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_docs():
