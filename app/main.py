@@ -1,15 +1,11 @@
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
 from scalar_fastapi import get_scalar_api_reference
-
+from model import Shipment
 app = FastAPI()
 
-class Shipment(BaseModel):
-    content: str
-    weight: float
-    destination: int
+
 
 shipments = {
     12403: {
