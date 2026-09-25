@@ -10,7 +10,7 @@ class ShipmentStatus(Enum):
     delivered = "delivered" 
 
 class BaseShipment(BaseModel):
-    content: int
+    content: str
     weight: float = Field(le=25)
     destination: int
 

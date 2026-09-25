@@ -9,32 +9,36 @@ app = FastAPI()
 # Shipment datastore as dict
 shipments = {
     12403: {
-        "content": "Glasswear",
+        "content": "Glassware",
         "weight": 0.6,
+        "destination": 11000,
         "status": "placed"
     },
     12404: {
         "content": "Electronics",
         "weight": 4.2,
+        "destination": 11001,
         "status": "in_transit"
     },
     12405: {
         "content": "Books",
         "weight": 1.8,
+        "destination": 11002,
         "status": "delivered"
     },
     12406: {
         "content": "Furniture",
         "weight": 22.5,
-        "status": "processing"
+        "destination": 11003,
+        "status": "placed"
     },
     12407: {
         "content": "Appliances",
         "weight": 18.0,
-        "status": "placed"
+        "destination": 11004,
+        "status": "out_for_delivery"
     }
 }
-
 
 # Shipment by id
 @app.get("/shipment", response_model=ShipmentRead)
@@ -61,9 +65,16 @@ def submit_shipment(shipment: ShipmentCreate) -> dict[str, int]:
 
 # Update fields of a shipment -> as content, weight, destination all will be same. In update we can only update status
 @app.patch("/shipment", response_model=ShipmentRead)
-def update_shipment(id: int, body:ShipmentUpdate):
-    # First extract that shipment from list
-    shipments[id].update(body)
+def update_shipment(id: int, body: ShipmentUpdate):
+
+    if id not in shipments:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Given Id doesn't exist"
+        )
+
+    shipments[id].update(body.model_dump())
+
     return shipments[id]
 
 # Delete a shipment
