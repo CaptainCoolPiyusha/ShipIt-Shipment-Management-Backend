@@ -1,14 +1,12 @@
-from typing import Any
-
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 
-from .schemas import Shipment
+from .schemas import ShipmentCreate, ShipmentRead, ShipmentUpdate
 
 app = FastAPI()
 
 
-
+# Shipment datastore as dict
 shipments = {
     12403: {
         "content": "Glasswear",
@@ -37,23 +35,11 @@ shipments = {
     }
 }
 
-# Order matters
-# Declare static routes before dynamic parameterized routes 
-@app.get("/shipment/latest") #static
-def get_latest_shipment():
-    id = max(shipments.keys())
-    return shipments[id]
 
-# Path parameter
-# @app.get("/shipment/{id}") # dynamic
-# def get_shipment_by_id(id: int) -> dict[str, Any]:
-#     if id not in shipments:
-#         return {"detail": "Given id doesn't exist"}
-#     return shipments[id]
-
-# Query parameter
-@app.get("/shipment")
-def get_shipment_by_id(id : int) -> dict[str, Any]:
+# Shipment by id
+@app.get("/shipment", response_model=ShipmentRead)
+def get_shipment(id : int):
+    # Check if that shipment id present
     if id not in shipments:
         raise HTTPException(
             status_code = status.HTTP_404_NOT_FOUND,
@@ -61,53 +47,36 @@ def get_shipment_by_id(id : int) -> dict[str, Any]:
         )
     return shipments[id]
 
-# Request body
+# Create new shipment with content and weight
 @app.post("/shipment")
-def submit_shipment(shipment: Shipment) -> dict[str, Any]:
-    if shipment.weight > 25:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Maximum weight limit is 25",
-        )
+def submit_shipment(shipment: ShipmentCreate) -> dict[str, int]:
+    # Create shipment to new_id
     new_id = max(shipments.keys()) + 1
+    # Add that shipment to new id
     shipments[new_id] = {
-        "content": shipment.content,
-        "weight": shipment.weight,
-        "status": "placed"
+        **shipment.model_dump(),
+        "status": "placed",
     }
-    return {"id": new_id}
+    return {"id": new_id} # --> Will be useful later
 
-# Using Path and Query parameter together
-@app.get("/shipment/{field}")
-def get_shipment_field(field: str, id:int) -> Any:
-    return shipments[id][field]
-
-# Replacing the current element with new values/Update
-@app.put("/shipment")
-def update_shipment(id: int, content: str, weight:float, status:str) -> dict[str, Any]:
-    shipments[id] = {
-        "content": content,
-        "weight": weight,
-        "status": status
-    }
+# Update fields of a shipment -> as content, weight, destination all will be same. In update we can only update status
+@app.patch("/shipment", response_model=ShipmentRead)
+def update_shipment(id: int, body:ShipmentUpdate):
+    # First extract that shipment from list
+    shipments[id].update(body)
     return shipments[id]
 
-@app.patch("/shipment")
-def patch_shipment(id: int, body: dict[str, Any]) -> dict[str, Any]:
-    # First extract that shipment from list
-    shipment = shipments[id]
-    shipment.update(body)
-    shipments[id] = shipment
-    return shipment
-
+# Delete a shipment
 @app.delete("/shipment")
-def delete_shipment(id: int) -> dict[str, Any]:
+def delete_shipment(id: int) -> dict[str, str]:
     if id in shipments:
         shipments.pop(id)
     return{"detail": f"Shipment with id #{id} is deleted!"}
 
+
+## Scalar API Documentation
 @app.get("/scalar", include_in_schema=False)
-def scalar_docs():
+def get_scalar_docs():
     return get_scalar_api_reference(
         openapi_url=app.openapi_url,
         title="Scalar API"
