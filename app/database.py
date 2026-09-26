@@ -52,3 +52,6 @@ connection.commit()
 
 # Delete table if needed
 # cursor.execute(" DROP TABLE shipment ")
+
+connection.close()
+

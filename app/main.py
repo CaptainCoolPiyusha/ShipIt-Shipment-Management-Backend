@@ -92,3 +92,4 @@ def get_scalar_docs():
         openapi_url=app.openapi_url,
         title="Scalar API"
     )
+
